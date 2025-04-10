@@ -1,10 +1,11 @@
 import pandas as pd
-from datetime import datetime
+import os
 
-# Load data (tab-separated)
-df = pd.read_csv('soc-pokec-profiles.txt', sep='\t', encoding='utf-8')
+# Load raw data
+input_path = os.path.join('..', 'data', 'raw', 'soc-pokec-profiles.txt')
+df = pd.read_csv(input_path, sep='\t', encoding='utf-8')
 
-# Select required columns (adjust based on actual headers)
+# Select required columns
 cols = ['user_id', 'gender', 'age', 'region', 'completion_percentage', 
         'favourite_color', 'hobbies', 'spoken_languages', 'eye_color',
         'registration', 'last_login']
@@ -14,5 +15,6 @@ df = df[cols]
 df = df.dropna(subset=['age', 'completion_percentage', 'gender', 'region'])
 
 # Save cleaned data
-df.to_csv('pokec_clean.csv', index=False)
-print("Data cleaned and saved!")
+output_path = os.path.join('..', 'data', 'processed', 'pokec_clean.csv')
+df.to_csv(output_path, index=False)
+print(f"Cleaned data saved to {output_path}")

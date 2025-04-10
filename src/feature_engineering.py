@@ -1,15 +1,23 @@
 import pandas as pd
+import os
 
-df = pd.read_csv('pokec_clean.csv')
+# Load clustered data
+input_path = os.path.join('..', 'data', 'processed', 'pokec_clustered.csv')
+df = pd.read_csv(input_path)
 
-# One-hot encode gender, region, eye_color
-df = pd.get_dummies(df, columns=['gender', 'region', 'eye_color'])
+# 1. One-hot encode categorical variables
+df = pd.get_dummies(df, columns=['gender', 'region', 'eye_color', 'favourite_color'])
 
-# Save encoded data
-df.to_csv('pokec_encoded.csv', index=False)
-# Split hobbies into binary flags
-hobbies = df['hobbies'].str.get_dummies(sep=',')
-df = pd.concat([df, hobbies], axis=1)
+# 2. Process multi-label columns (hobbies)
+hobbies_dummies = df['hobbies'].str.get_dummies(sep=',')
+df = pd.concat([df, hobbies_dummies], axis=1)
 
-# Save final data
-df.to_csv('pokec_final.csv', index=False)
+# 3. Calculate days since registration
+df['registration'] = pd.to_datetime(df['registration'])
+df['last_login'] = pd.to_datetime(df['last_login'])
+df['days_since_registration'] = (df['last_login'] - df['registration']).dt.days
+
+# Save final dataset
+output_path = os.path.join('..', 'data', 'processed', 'pokec_final.csv')
+df.to_csv(output_path, index=False)
+print(f"Final dataset saved to {output_path}")

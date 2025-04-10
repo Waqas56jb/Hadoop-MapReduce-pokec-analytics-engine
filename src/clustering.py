@@ -1,22 +1,25 @@
-from mrjob.job import MRJob
-import numpy as np
+import pandas as pd
+import os
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
-class MRKMeans(MRJob):
-    def mapper(self, _, line):
-        if "user_id" in line:
-            return
-        fields = line.split(',')
-        age = float(fields[2])
-        completion = float(fields[4])
-        yield None, (age, completion)
+# Load cleaned data
+input_path = os.path.join('..', 'data', 'processed', 'pokec_clean.csv')
+df = pd.read_csv(input_path)
 
-    def reducer(self, _, values):
-        data = list(values)
-        X = np.array(data)
-        kmeans = KMeans(n_clusters=3)
-        kmeans.fit(X)
-        yield "Cluster Centers", kmeans.cluster_centers_.tolist()
+# Cluster age vs. completion %
+X = df[['age', 'completion_percentage']].values
+kmeans = KMeans(n_clusters=3)
+df['cluster'] = kmeans.fit_predict(X)
 
-if __name__ == '__main__':
-    MRKMeans.run()
+# Save clustered data
+output_data_path = os.path.join('..', 'data', 'processed', 'pokec_clustered.csv')
+df.to_csv(output_data_path, index=False)
+
+# Plot clusters
+plt.scatter(df['age'], df['completion_percentage'], c=df['cluster'])
+plt.xlabel('Age')
+plt.ylabel('Completion %')
+plot_path = os.path.join('..', 'data', 'output', 'clusters.png')
+plt.savefig(plot_path)
+print(f"Clustering results saved to {output_data_path} and {plot_path}")

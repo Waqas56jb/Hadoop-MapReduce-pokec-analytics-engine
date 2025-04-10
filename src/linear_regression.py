@@ -1,5 +1,6 @@
 from mrjob.job import MRJob
 import numpy as np
+import os
 
 class MRLinearRegression(MRJob):
     def mapper(self, _, line):
@@ -18,7 +19,15 @@ class MRLinearRegression(MRJob):
         X = np.array(X)
         Y = np.array(Y)
         coeff = np.polyfit(X, Y, 1)
-        yield "Regression Coefficients", coeff.tolist()
+        yield "coefficients", coeff.tolist()
 
 if __name__ == '__main__':
-    MRLinearRegression.run()
+    input_path = os.path.join('..', 'data', 'processed', 'pokec_final.csv')
+    output_path = os.path.join('..', 'data', 'output', 'regression_results.txt')
+    
+    with open(input_path, 'r') as f, open(output_path, 'w') as out:
+        mr_job = MRLinearRegression(args=[f.name])
+        with mr_job.make_runner() as runner:
+            runner.run()
+            for line in runner.stream_output():
+                out.write(line.decode('utf-8'))
